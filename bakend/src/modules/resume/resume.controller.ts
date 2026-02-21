@@ -3,14 +3,11 @@ import { processAndSaveResume } from './resume.service'
 
 export async function uploadResume(req: Request, res: Response) {
      try {
-          
           if (!req.file) {
                res.status(400).json({ success: false, message: 'No file uploaded' })
                return
           }
-
-          const resume = await processAndSaveResume(req.file)
-
+          const resume = await processAndSaveResume(req.file, req.user?.userId as string)
           res.status(201).json({
                success: true,
                message: 'Resume uploaded and processed successfully',
@@ -28,7 +25,8 @@ export async function uploadResume(req: Request, res: Response) {
 export async function getAllResumes(req: Request, res: Response) {
      try {
           const { Resume } = await import('./resume.model')
-          const resumes = await Resume.find({}, '-rawText')
+          const filter = req.user?.role === 'admin' ? {} : { userId: req.user?.userId }
+          const resumes = await Resume.find(filter, '-rawText')
           res.status(200).json({ success: true, data: resumes })
      } catch (error: any) {
           res.status(500).json({ success: false, message: error.message })

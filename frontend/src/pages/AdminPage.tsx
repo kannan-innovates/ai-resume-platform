@@ -1,10 +1,10 @@
 // src/pages/AdminPage.tsx
 
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getAllResumes, getVaultEntries, approveCareerPath } from '../features/admin/api'
 import Badge from '../shared/components/Badge'
 import Spinner from '../shared/components/Spinner'
+import toast from 'react-hot-toast'
 
 const JOB_OPTIONS = [
   'fullstack developer', 'frontend developer', 'backend developer',
@@ -21,11 +21,14 @@ export default function AdminPage() {
   const [approving, setApproving] = useState<string | null>(null)
 
   // Approval form state
-  const [selectedResume, setSelectedResume] = useState<any>(null)
   const [careerPath, setCareerPath] = useState('')
   const [notes, setNotes] = useState('')
 
-  const navigate = useNavigate()
+  const [reviewResume, setReviewResume] = useState<any>(null)
+const [reviewData, setReviewData] = useState<{ skillGap?: any; careerPivot?: any }>({})
+const [reviewLoading, setReviewLoading] = useState(false)
+const [reviewJob, setReviewJob] = useState('')
+
 
   useEffect(() => {
     Promise.all([getAllResumes(), getVaultEntries()])
@@ -47,11 +50,13 @@ export default function AdminPage() {
       const [r, v] = await Promise.all([getAllResumes(), getVaultEntries()])
       setResumes(r)
       setVault(v)
-      setSelectedResume(null)
+      setReviewResume(null)
       setCareerPath('')
       setNotes('')
+      toast.success('Career path approved!')
     } catch (e) {
       console.error(e)
+      toast.error('Approval failed. Try again.')
     } finally {
       setApproving(null)
     }
@@ -62,7 +67,8 @@ export default function AdminPage() {
   )
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <>
+      <div className="max-w-5xl mx-auto">
 
       {/* Header */}
       <div className="mb-6">
@@ -138,7 +144,15 @@ export default function AdminPage() {
 
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
-                    onClick={() => navigate(`/dashboard/${resume._id}`)}
+                    onClick={async () => {
+                      const { getResumeById } = await import('../features/admin/api')
+                      const full = await getResumeById(resume._id)
+                      setReviewResume(full)
+                      setReviewData({})
+                      setReviewJob('')
+                      setCareerPath('')
+                      setNotes('')
+                    }}
                     style={{
                       background: 'transparent',
                       border: '1px solid var(--border)',
@@ -149,109 +163,10 @@ export default function AdminPage() {
                       cursor: 'pointer',
                     }}
                   >
-                    View
+                    Review
                   </button>
-                  {resume.status === 'analyzed' && (
-                    <button
-                      onClick={() => setSelectedResume(selectedResume?._id === resume._id ? null : resume)}
-                      style={{
-                        background: 'var(--accent)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '7px 14px',
-                        color: 'white',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Approve Path
-                    </button>
-                  )}
                 </div>
               </div>
-
-              {/* Inline approval form */}
-              {selectedResume?._id === resume._id && (
-                <div
-                  style={{
-                    marginTop: '16px',
-                    paddingTop: '16px',
-                    borderTop: '1px solid var(--border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                  }}
-                >
-                  <select
-                    value={careerPath}
-                    onChange={e => setCareerPath(e.target.value)}
-                    style={{
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '10px 14px',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px',
-                      outline: 'none',
-                    }}
-                  >
-                    <option value="">Select career path to approve...</option>
-                    {JOB_OPTIONS.map(j => <option key={j} value={j}>{j}</option>)}
-                  </select>
-
-                  <textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder="Admin notes (optional)"
-                    rows={2}
-                    style={{
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '10px 14px',
-                      color: 'var(--text-primary)',
-                      fontSize: '14px',
-                      outline: 'none',
-                      resize: 'none',
-                    }}
-                  />
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => handleApprove(resume)}
-                      disabled={!careerPath || approving === resume._id}
-                      style={{
-                        background: 'var(--success)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '9px 20px',
-                        color: 'white',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        cursor: (!careerPath || approving) ? 'default' : 'pointer',
-                        opacity: (!careerPath || approving) ? 0.6 : 1,
-                      }}
-                    >
-                      {approving === resume._id ? 'Approving...' : 'Confirm Approval'}
-                    </button>
-                    <button
-                      onClick={() => setSelectedResume(null)}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        padding: '9px 16px',
-                        color: 'var(--text-muted)',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -299,7 +214,125 @@ export default function AdminPage() {
           ))}
         </div>
       )}
+      </div>
+      {/* Resume Review Drawer */}
+      {reviewResume && (
+        <div style={{
+          position: 'fixed', top: 0, right: 0,
+          width: '520px', height: '100vh',
+          background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)',
+          zIndex: 100, overflowY: 'auto', padding: '32px 28px',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontFamily: 'Bricolage Grotesque', color: 'var(--text-primary)', fontSize: '18px', fontWeight: 700 }}>
+              Resume Review
+            </h3>
+            <button
+              onClick={() => { setReviewResume(null); setReviewData({}) }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}
+            >✕</button>
+          </div>
 
-    </div>
+          {/* Resume info */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+            <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>{reviewResume.fileName}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '12px' }}>{reviewResume.skills?.length} skills detected</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {reviewResume.skills?.map((s: string) => (
+                <span key={s} style={{ background: 'rgba(0,174,239,0.08)', color: 'var(--accent)', border: '1px solid rgba(0,174,239,0.2)', borderRadius: '6px', padding: '2px 10px', fontSize: '12px' }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Analysis summary */}
+          {reviewResume.aiAnalysis && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>ATS Score</p>
+              <p style={{ color: 'var(--accent)', fontSize: '32px', fontWeight: 700, fontFamily: 'Bricolage Grotesque', marginBottom: '8px' }}>
+                {reviewResume.aiAnalysis.ats_score}<span style={{ fontSize: '16px', color: 'var(--text-muted)' }}>/100</span>
+              </p>
+              <p style={{ color: 'var(--text-primary)', fontSize: '13px', lineHeight: 1.6 }}>{reviewResume.aiAnalysis.summary}</p>
+            </div>
+          )}
+
+          {/* Skill Gap check */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Check Skill Gap</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                value={reviewJob}
+                onChange={e => setReviewJob(e.target.value)}
+                style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 12px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' }}
+              >
+                <option value="">Select role...</option>
+                {JOB_OPTIONS.map(j => <option key={j} value={j}>{j}</option>)}
+              </select>
+              <button
+                onClick={async () => {
+                  if (!reviewJob) return
+                  setReviewLoading(true)
+                  try {
+                    const { getSkillGapAdmin } = await import('../features/admin/api')
+                    const gap = await getSkillGapAdmin(reviewResume._id, reviewJob)
+                    setReviewData(p => ({ ...p, skillGap: gap }))
+                  } catch { toast.error('Failed to load skill gap') }
+                  finally { setReviewLoading(false) }
+                }}
+                style={{ background: 'var(--accent)', border: 'none', borderRadius: '8px', padding: '8px 16px', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+              >
+                {reviewLoading ? '...' : 'Go'}
+              </button>
+            </div>
+
+            {reviewData.skillGap && (
+              <div style={{ marginTop: '14px' }}>
+                <p style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '24px', fontFamily: 'Bricolage Grotesque' }}>{reviewData.skillGap.matchPercentage}% match</p>
+                <div style={{ height: '4px', background: 'var(--border)', borderRadius: '999px', overflow: 'hidden', margin: '8px 0 12px' }}>
+                  <div style={{ height: '100%', width: `${reviewData.skillGap.matchPercentage}%`, background: 'var(--accent)', borderRadius: '999px' }} />
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '6px' }}>Missing:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {reviewData.skillGap.missingSkills?.map((s: string) => (
+                    <span key={s} style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', padding: '2px 10px', fontSize: '12px' }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Approve section */}
+          {reviewResume.status === 'analyzed' && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Approve Career Path</p>
+              <select
+                value={careerPath}
+                onChange={e => setCareerPath(e.target.value)}
+                style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '9px 12px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', marginBottom: '10px' }}
+              >
+                <option value="">Select career path...</option>
+                {JOB_OPTIONS.map(j => <option key={j} value={j}>{j}</option>)}
+              </select>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Admin notes (optional)"
+                rows={2}
+                style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '9px 12px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', resize: 'none', marginBottom: '10px' }}
+              />
+              <button
+                onClick={() => handleApprove(reviewResume)}
+                disabled={!careerPath || approving === reviewResume._id}
+                style={{ width: '100%', background: 'var(--success)', border: 'none', borderRadius: '8px', padding: '10px', color: 'white', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: (!careerPath || approving) ? 0.6 : 1 }}
+              >
+                {approving === reviewResume._id ? 'Approving...' : 'Confirm Approval'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </>
   )
 }

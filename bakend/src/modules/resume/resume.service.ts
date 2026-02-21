@@ -42,13 +42,13 @@ export async function extractText(filePath: string, mimetype: string): Promise<{
 // ─── Basic Parsing ──────
 
 function parseSkills(text: string): string[] {
-  const lower = text.toLowerCase()
-  return KNOWN_SKILLS.filter(skill => {
-    // Escape special regex characters like + . * ? ( ) [ ] { } ^ $ |
-    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(`\\b${escaped}\\b`, 'i')
-    return regex.test(lower)
-  })
+     const lower = text.toLowerCase()
+     return KNOWN_SKILLS.filter(skill => {
+          // Escape special regex characters like + . * ? ( ) [ ] { } ^ $ |
+          const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          const regex = new RegExp(`\\b${escaped}\\b`, 'i')
+          return regex.test(lower)
+     })
 }
 
 function parseEducation(text: string): string[] {
@@ -71,14 +71,14 @@ function parseExperience(text: string): string[] {
 }
 
 function parseLocation(text: string): string {
-  const locationPattern = /([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),\s*(Kerala|Tamil Nadu|Karnataka|Maharashtra|India|USA|UK|Canada|Australia|Germany)/
-  const match = text.match(locationPattern)
-  return match ? match[0] : ''
+     const locationPattern = /([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),\s*(Kerala|Tamil Nadu|Karnataka|Maharashtra|India|USA|UK|Canada|Australia|Germany)/
+     const match = text.match(locationPattern)
+     return match ? match[0] : ''
 }
 
 // ─── Main Service Function ───────────────────────────────────────
 
-export async function processAndSaveResume(file: Express.Multer.File): Promise<IResume> {
+export async function processAndSaveResume(file: Express.Multer.File, userId: string): Promise<IResume> {
      const { text, fileType } = await extractText(file.path, file.mimetype)
 
      // Delete temp file after extraction
@@ -94,6 +94,6 @@ export async function processAndSaveResume(file: Express.Multer.File): Promise<I
           location: parseLocation(text),
      }
 
-     const resume = await Resume.create(parsed)
+     const resume = await Resume.create({ ...parsed, userId })
      return resume
 }

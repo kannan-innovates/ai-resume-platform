@@ -1,37 +1,43 @@
 {
-  "hash": "e200d657",
+  "hash": "9fc77a1d",
   "configHash": "23e89382",
-  "lockfileHash": "895233fc",
-  "browserHash": "a65cd864",
+  "lockfileHash": "995dc0cf",
+  "browserHash": "814310e3",
   "optimized": {
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "54da6a0c",
+      "fileHash": "a7e38db9",
       "needsInterop": true
     },
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "ef543cdf",
+      "fileHash": "ffdb1722",
       "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "2e4a88cd",
+      "fileHash": "4bd3cf3f",
       "needsInterop": true
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "242cda89",
+      "fileHash": "6585822b",
       "needsInterop": false
     },
     "axios": {
       "src": "../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "8488071c",
+      "fileHash": "6cd44907",
+      "needsInterop": false
+    },
+    "react-hot-toast": {
+      "src": "../../node_modules/react-hot-toast/dist/index.mjs",
+      "file": "react-hot-toast.js",
+      "fileHash": "db407e84",
       "needsInterop": false
     }
   },

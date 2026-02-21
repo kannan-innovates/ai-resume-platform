@@ -2,6 +2,7 @@
 import { useRef, useState, type DragEvent } from 'react'
 import Spinner from '../../../shared/components/Spinner'
 import { uploadResume } from './api'
+import toast from 'react-hot-toast'
 
 interface Props {
   onUploaded: (resume: unknown) => void
@@ -11,25 +12,25 @@ export default function UploadZone({ onUploaded }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  
 
   async function handleFile(file: File) {
-    const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    if (!allowed.includes(file.type)) {
-      setError('Only PDF or DOCX files are supported.')
-      return
-    }
-    setError('')
-    setLoading(true)
-    try {
-      const resume = await uploadResume(file)
-      onUploaded(resume)
-    } catch (e: any) {
-      setError(e.response?.data?.message || 'Upload failed. Try again.')
-    } finally {
-      setLoading(false)
-    }
+  const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  if (!allowed.includes(file.type)) {
+    toast.error('Only PDF or DOCX files are supported.')
+    return
   }
+  setLoading(true)
+  try {
+    const resume = await uploadResume(file)
+    toast.success('Resume uploaded successfully!')
+    onUploaded(resume)
+  } catch (e: any) {
+    toast.error(e.response?.data?.message || 'Upload failed. Try again.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   function onDrop(e: DragEvent) {
     e.preventDefault()
@@ -99,9 +100,7 @@ export default function UploadZone({ onUploaded }: Props) {
         </>
       )}
 
-      {error && (
-        <p style={{ marginTop: '16px', fontSize: '14px', color: 'var(--danger)' }}>{error}</p>
-      )}
+      
     </div>
   )
 }

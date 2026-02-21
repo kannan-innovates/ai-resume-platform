@@ -11,6 +11,7 @@ export interface IResume extends Document {
      aiAnalysis?: object
      status: 'pending' | 'analyzed' | 'approved'
      createdAt: Date
+     userId?: mongoose.Types.ObjectId
 }
 
 const ResumeSchema = new Schema<IResume>(
@@ -24,6 +25,7 @@ const ResumeSchema = new Schema<IResume>(
           location: { type: String, default: '' },
           aiAnalysis: { type: Schema.Types.Mixed, default: null },
           status: { type: String, enum: ['pending', 'analyzed', 'approved'], default: 'pending' },
+          userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
      },
      { timestamps: true }
 )

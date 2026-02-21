@@ -51,7 +51,13 @@ export default function ResumeCard({ resume, onAnalyze, analyzing }: Props) {
             transition: 'opacity 0.2s',
           }}
         >
-          {analyzing ? 'Analyzing...' : resume.status !== 'pending' ? 'Analyzed ✓' : 'Run AI Analysis'}
+          {analyzing 
+            ? 'Analyzing...' 
+            : resume.status === 'approved' 
+              ? 'Approved ✓' 
+              : resume.status === 'analyzed' 
+                ? 'Analyzed ✓' 
+                : 'Run AI Analysis'}
         </button>
       </div>
 
