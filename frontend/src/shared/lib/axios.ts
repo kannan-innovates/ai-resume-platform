@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:5002/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://skillmount-backend.onrender.com/api',
   timeout: 30000,
 })
 
