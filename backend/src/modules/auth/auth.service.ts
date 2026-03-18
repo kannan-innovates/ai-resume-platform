@@ -14,7 +14,7 @@ export async function registerUser(input: RegisterInput) {
   const exists = await User.findOne({ email: input.email })
   if (exists) throw new Error('Email already registered')
 
-  const hashed = await bcrypt.hash(input.password, 12)
+  const hashed = await bcrypt.hash(input.password, 10)
   const user = await User.create({ ...input, password: hashed })
 
   const token = signToken({

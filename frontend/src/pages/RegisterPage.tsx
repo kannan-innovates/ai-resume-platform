@@ -100,7 +100,7 @@ export default function RegisterPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           }}
         >
-          {loading ? <><Spinner size={16} /> Creating account...</> : 'Create Account'}
+          {loading ? <><Spinner size={18} /> Creating account...</> : 'Create Account'}
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)', fontSize: '14px' }}>

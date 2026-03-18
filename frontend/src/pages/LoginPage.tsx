@@ -89,7 +89,7 @@ export default function LoginPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           }}
         >
-          {loading ? <><Spinner size={16} /> Signing in...</> : 'Sign In'}
+          {loading ? <><Spinner size={18} /> Authenticating...</> : 'Sign In'}
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)', fontSize: '14px' }}>
